@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: continuity_pass
       POSTGRES_DB: continuityos
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - continuity_data:/var/lib/postgresql/data
 

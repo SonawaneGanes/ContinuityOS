@@ -73,5 +73,15 @@ def test_readiness_score_formula():
     assert calculate_readiness_score(unowned, conflicts, [], []) == 81
 
 
+def test_readiness_counts_conflicting_milestones_not_each_evidence_claim():
+    conflicts = [
+        make(kind="deadline", subject="deployment", due_date="2026-11-20"),
+        make(kind="deadline", subject="deployment", due_date="2026-11-25"),
+        make(kind="deadline", subject="report", due_date="2026-11-15"),
+        make(kind="deadline", subject="report", due_date="2026-11-18"),
+    ]
+    assert calculate_readiness_score([], conflicts, [], []) == 90
+
+
 def test_readiness_score_never_below_zero():
     assert calculate_readiness_score([1] * 50, [], [], []) == 0

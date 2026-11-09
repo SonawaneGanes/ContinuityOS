@@ -60,10 +60,19 @@ def calculate_readiness_score(
     missing_evidence: list[Any],
     open_deps: list[Any],
 ) -> int:
+    conflict_milestones = {
+        claim.subject
+        for claim in conflicts
+        if getattr(claim, "subject", None) is not None
+    }
+    conflicts_without_milestone = sum(
+        getattr(claim, "subject", None) is None for claim in conflicts
+    )
+    conflict_count = len(conflict_milestones) + conflicts_without_milestone
     score = (
         100
         - 3 * len(unowned)
-        - 5 * len(conflicts)
+        - 5 * conflict_count
         - 2 * len(missing_evidence)
         - 2 * len(open_deps)
     )
