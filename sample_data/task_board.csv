@@ -1,0 +1,8 @@
+task_id,task,owner,status,last_updated,depends_on
+T1,Login API,Ravi Kumar,In Progress,2026-10-28,
+T2,Attendance report page,Priya,In Progress,2026-10-30,
+T3,SMS notification service,,In Progress,2026-09-01,
+T4,Export to CSV,,To Do,,
+T5,Admin dashboard,Shreyas,To Do,2026-11-01,T9
+T6,Database schema,Ganesh,Done,2026-10-15,
+T7,Email reminders,,To Do,,

@@ -1,0 +1,3 @@
+[2026-11-03 18:02] Shreyas: Reminder, deployment is moved to 25 November. Check with the mentor.
+[2026-11-04 10:15] Ganesh: Report submission is 18 November now, not 15.
+[2026-11-05 09:40] Pranav: Who is taking the email reminders feature?
