@@ -62,3 +62,4 @@ commit real credentials.
 
 FastAPI, SQLAlchemy, psycopg2, python-dotenv, python-multipart, pypdf,
 python-docx, OpenAI, and pytest.
+https://github.com/SonawaneGanes/ContinuityOS/blob/9883a3f7f5b6bdd011ca636cca41c255b989f416/diagram.png
