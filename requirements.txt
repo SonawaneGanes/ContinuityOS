@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic>=2
+sqlalchemy
+psycopg2-binary
+python-dotenv
+python-multipart
+pypdf
+python-docx
+openai
+pytest
