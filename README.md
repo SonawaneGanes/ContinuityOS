@@ -25,14 +25,14 @@ ContinuityOS turns project files (meeting notes, task boards, READMEs, chat logs
 | Backend | Python, FastAPI, SQLAlchemy, Pydantic |
 | Database | PostgreSQL 16 (Docker) |
 | Parsing | pypdf, python-docx |
-| AI extraction | OpenAI API |
+| AI extraction | Google Gemini API |
 
 ## Prerequisites
 
 - Docker Desktop (running)
 - Python 3.11 or newer
 - Node.js 18 or newer
-- An OpenAI API key (only needed for uploading files)
+- A Google Gemini API key (only needed for uploading files)
 
 ## Setup
 
@@ -67,8 +67,8 @@ Set these values in `backend/.env`:
 
 ```
 DATABASE_URL=postgresql://continuity:continuity_pass@localhost:5432/continuityos
-OPENAI_API_KEY=your_key_here
-LLM_MODEL=gpt-4o-mini
+GEMINI_API_KEY=your_key_here
+LLM_MODEL=gemini-3.8-flash
 ```
 
 Never commit `.env`. It is listed in `.gitignore`.
@@ -110,7 +110,7 @@ Configure these environment variables:
   (for example, `https://api.example.com`, without a trailing slash), then
   trigger a new deploy. `frontend/.env.example` shows the expected format.
 - **Backend host:** Set `DATABASE_URL` to the hosted PostgreSQL connection
-  string, `OPENAI_API_KEY` for file extraction, and `CORS_ORIGINS` to the
+  string, `GEMINI_API_KEY` for file extraction, and `CORS_ORIGINS` to the
   exact Netlify site origin (for example, `https://your-site.netlify.app`).
   Multiple allowed origins can be comma-separated. Keep the local origins in
   `backend/.env.example` when developing locally.
@@ -130,7 +130,7 @@ with that prefix are included in the public frontend bundle.
 
    Note the project ID it prints and use it in the frontend.
 
-2. Or upload files from `sample_data/` using **Upload evidence** in the app, or `POST /projects/{id}/upload` in `/docs`. Uploading needs `OPENAI_API_KEY`.
+2. Or upload files from `sample_data/` using **Upload evidence** in the app, or `POST /projects/{id}/upload` in `/docs`. Uploading needs `GEMINI_API_KEY`.
 
 3. Review claims: `GET /projects/{id}/claims`
 4. Review gaps and score: `GET /projects/{id}/gaps`
@@ -146,7 +146,7 @@ Run unit tests from the `backend` folder:
 python -m pytest
 ```
 
-Run the extraction benchmark (needs `OPENAI_API_KEY`):
+Run the extraction benchmark (needs `GEMINI_API_KEY`):
 
 ```powershell
 python run_benchmark.py

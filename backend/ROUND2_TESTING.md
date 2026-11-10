@@ -19,7 +19,7 @@ arithmetic error.
 ## LLM extraction benchmark
 
 The benchmark script runs three extraction passes by default and prints the
-recall/precision averages. It was not run because `OPENAI_API_KEY` is not
+recall/precision averages. It was not run because `GEMINI_API_KEY` is not
 configured in this environment. No benchmark results are reported as if they
 were measured. After configuring the key in `backend/.env`, run
 `python run_benchmark.py` from `backend` and add the measured output here.

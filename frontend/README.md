@@ -25,4 +25,4 @@ Open <http://localhost:5173>, enter the project ID printed by `seed_demo.py`,
 and load the project. Set `VITE_API_URL` only if the backend is hosted somewhere
 other than `http://127.0.0.1:8000`.
 
-Uploading evidence files requires `OPENAI_API_KEY` in `backend/.env`.
+Uploading evidence files requires `GEMINI_API_KEY` in `backend/.env`.
