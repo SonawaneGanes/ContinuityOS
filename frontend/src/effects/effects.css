@@ -1,0 +1,301 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Effects — custom cursor, image trail, magnetic pull, scroll reveal.
+   Everything here is decoration: remove this file and the app still works.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* ── Custom cursor ──────────────────────────────────────────────────────── */
+
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none !important;
+}
+
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483000;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.cursor[data-visible="true"] {
+  opacity: 1;
+}
+
+/* White + difference = always the opposite of what is underneath. */
+.cursor-blend {
+  mix-blend-mode: difference;
+}
+
+.cursor-mover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+.cursor-ring {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0%);
+  transition:
+    width 0.4s var(--ease-out),
+    height 0.4s var(--ease-out),
+    margin 0.4s var(--ease-out),
+    background-color 0.3s ease,
+    opacity 0.25s ease,
+    transform 0.3s var(--ease-out);
+}
+
+.cursor-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 3px;
+  background: #fff;
+  transition:
+    width 0.25s var(--ease-out),
+    height 0.25s var(--ease-out),
+    margin 0.25s var(--ease-out),
+    transform 0.25s var(--ease-out);
+}
+
+.cursor-blend[data-state="hover"] .cursor-ring {
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  background: #fff;
+}
+
+.cursor-blend[data-state="hover"] .cursor-dot {
+  transform: scale(0);
+}
+
+.cursor-blend[data-state="text"] .cursor-ring,
+.cursor-blend[data-state="label"] .cursor-ring {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.cursor-blend[data-state="text"] .cursor-dot {
+  width: 2px;
+  height: 24px;
+  margin: -12px 0 0 -1px;
+  border-radius: 1px;
+}
+
+.cursor-blend[data-pressed="true"] .cursor-ring {
+  transform: scale(0.78);
+}
+
+.cursor-tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 10px 7px 11px;
+  border-radius: 999px;
+  color: var(--on-lime);
+  background: var(--lime);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(0.5);
+  transform-origin: 0 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.4s var(--ease-spring);
+}
+
+.cursor-plain[data-state="label"] .cursor-tag {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── Image trail ────────────────────────────────────────────────────────── */
+
+/* z-index: 0 gives the trail its own stacking context, so the cards stack
+   among themselves and the headline always stays on top of them. */
+.trail {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* A soft light that follows the trail. */
+.trail-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 760px;
+  height: 760px;
+  margin: -380px 0 0 -380px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(var(--cobalt-rgb) / 32%),
+    rgb(var(--cobalt-rgb) / 10%) 48%,
+    transparent 72%
+  );
+  will-change: transform;
+}
+
+.trail-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(124px, 14.5vw, 212px);
+  aspect-ratio: 4 / 5;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 14%),
+    0 20px 50px rgb(0 0 0 / 45%);
+  opacity: 0;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.trail-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.trail-item figcaption {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  max-width: calc(100% - 16px);
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #f3f1ea;
+  background: rgb(6 9 18 / 82%);
+  font: 500 10px/1 var(--font-mono);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.trail-pin {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lime);
+}
+
+:root[data-theme="light"] .trail-glow {
+  background: radial-gradient(
+    closest-side,
+    rgb(var(--cobalt-rgb) / 16%),
+    rgb(var(--lime-rgb) / 14%) 50%,
+    transparent 72%
+  );
+}
+
+:root[data-theme="light"] .trail-item {
+  box-shadow:
+    0 0 0 1px rgb(7 13 25 / 10%),
+    0 20px 46px rgb(7 13 25 / 22%);
+}
+
+/* Motion off: three pictures stand still in a fan, so the hero keeps its
+   composition without anything moving. */
+.trail-still .trail-item {
+  top: 27%;
+  right: max(var(--page-pad), (100% - var(--page-max)) / 2);
+  left: auto;
+  opacity: 1;
+  will-change: auto;
+}
+
+.trail-still .trail-item:nth-child(1) {
+  transform: translate(-150%, 26%) rotate(-9deg);
+}
+
+.trail-still .trail-item:nth-child(2) {
+  transform: translate(-76%, -6%) rotate(4deg);
+}
+
+.trail-still .trail-item:nth-child(3) {
+  transform: translate(-4%, 30%) rotate(10deg);
+}
+
+@media (max-width: 680px) {
+  .trail-still .trail-item {
+    top: 92px;
+    width: 104px;
+  }
+}
+
+/* Short phones have no spare room above the headline. */
+@media (max-width: 680px) and (max-height: 760px) {
+  .trail-still {
+    display: none;
+  }
+}
+
+/* ── Magnetic ───────────────────────────────────────────────────────────── */
+
+.magnetic,
+.magnetic-inner {
+  display: inline-flex;
+}
+
+.magnetic-inner {
+  transform: translate3d(var(--magnet-x, 0px), var(--magnet-y, 0px), 0);
+  transition: transform 0.7s var(--ease-spring);
+}
+
+.magnetic[data-pulled="true"] .magnetic-inner {
+  transition: transform 0.16s ease-out;
+}
+
+/* ── Scroll reveal ──────────────────────────────────────────────────────── */
+
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0);
+  transition:
+    opacity 0.9s var(--ease-out) var(--reveal-delay, 0ms),
+    transform 0.9s var(--ease-out) var(--reveal-delay, 0ms);
+}
+
+.reveal.is-shown {
+  opacity: 1;
+  transform: none;
+}
+
+@media print {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .cursor,
+  .trail {
+    display: none;
+  }
+}
