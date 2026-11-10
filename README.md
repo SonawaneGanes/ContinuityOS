@@ -95,6 +95,31 @@ npm run dev
 
 Open <http://localhost:5173>.
 
+## Deploy the frontend to Netlify
+
+The repository includes a `netlify.toml` configured to install and build the
+Vite app in `frontend/`, publish `frontend/dist/`, and serve the app entry point
+for page routes. Connect the GitHub repository to Netlify and deploy with the
+detected settings; no custom build command or publish directory is needed.
+
+The frontend needs a separately deployed backend and PostgreSQL database;
+Netlify hosts the static frontend, not this FastAPI service or its database.
+Configure these environment variables:
+
+- **Netlify:** Set `VITE_API_URL` to the public base URL of the deployed API
+  (for example, `https://api.example.com`, without a trailing slash), then
+  trigger a new deploy. `frontend/.env.example` shows the expected format.
+- **Backend host:** Set `DATABASE_URL` to the hosted PostgreSQL connection
+  string, `OPENAI_API_KEY` for file extraction, and `CORS_ORIGINS` to the
+  exact Netlify site origin (for example, `https://your-site.netlify.app`).
+  Multiple allowed origins can be comma-separated. Keep the local origins in
+  `backend/.env.example` when developing locally.
+
+Check that `https://<your-backend-host>/health` returns `{"status":"ok"}` and
+that the deployed frontend can reach it before using upload and project
+features. Never put backend secrets in Netlify's `VITE_*` variables; values
+with that prefix are included in the public frontend bundle.
+
 ## Demo
 
 1. Create demo data (from the `backend` folder):
