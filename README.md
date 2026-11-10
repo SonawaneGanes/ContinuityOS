@@ -120,6 +120,25 @@ that the deployed frontend can reach it before using upload and project
 features. Never put backend secrets in Netlify's `VITE_*` variables; values
 with that prefix are included in the public frontend bundle.
 
+### Deploy the API on Render
+
+The root `render.yaml` defines the API service. In Render, choose **New +
+Blueprint** and connect this repository. The service installs dependencies
+from the root `requirements.txt` and starts Uvicorn from `backend/`, where the
+`app` package lives. It also pins Python to 3.12.10 and uses `/health` as its
+health check.
+
+Set the prompted environment variables on the Render API service:
+
+- `DATABASE_URL`: the **internal** database URL from your Render PostgreSQL
+  instance (ideally in the same Oregon region as the API).
+- `GEMINI_API_KEY`: your Gemini API key.
+- `CORS_ORIGINS`: your exact Netlify site origin, such as
+  `https://your-site.netlify.app` (no trailing slash).
+
+After deployment, set Netlify's `VITE_API_URL` to the Render API service URL
+and redeploy the frontend.
+
 ## Demo
 
 1. Create demo data (from the `backend` folder):
