@@ -123,10 +123,10 @@ with that prefix are included in the public frontend bundle.
 ### Deploy the API on Render
 
 The root `render.yaml` defines the API service. In Render, choose **New +
-Blueprint** and connect this repository. The service installs dependencies
-from the root `requirements.txt` and starts Uvicorn from `backend/`, where the
-`app` package lives. It also pins Python to 3.12.10 and uses `/health` as its
-health check.
+Blueprint** and connect this repository. The service uses `backend/` as its
+root directory, installs dependencies from `backend/requirements.txt`, and
+starts Uvicorn from the directory containing the `app` package. It also pins
+Python to 3.12.10 and uses `/health` as its health check.
 
 Set the prompted environment variables on the Render API service:
 
