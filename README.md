@@ -36,6 +36,14 @@ ContinuityOS turns project files (meeting notes, task boards, READMEs, chat logs
 
 ## Setup
 
+Before deploying RBAC, create the initial role accounts from this working copy
+by setting `SEED_LEAD_PASSWORD`, `SEED_SUCCESSOR_PASSWORD`, and
+`SEED_MANAGER_PASSWORD` to unique, randomly generated passwords of at least 24
+characters, then running `python seed_users.py` from `backend/` with
+`DATABASE_URL` pointing to the target database. This creates only the new
+authentication tables and users; the application never seeds users on startup.
+Do not commit the passwords.
+
 ### 1. Start PostgreSQL
 
 From the project root (`continuityos/`):
@@ -138,6 +146,10 @@ Set the prompted environment variables on the Render API service:
 - `GEMINI_API_KEY`: your Gemini API key.
 - `CORS_ORIGINS`: your exact Netlify site origin, such as
   `https://your-site.netlify.app` (no trailing slash).
+- `SEED_LEAD_PASSWORD`, `SEED_SUCCESSOR_PASSWORD`, and
+  `SEED_MANAGER_PASSWORD`: only needed for the one-time manual user seeding
+  step; do not commit these values. Remove them from the service environment
+  after seeding.
 
 After deployment, set Netlify's `VITE_API_URL` to the Render API service URL
 and redeploy the frontend.

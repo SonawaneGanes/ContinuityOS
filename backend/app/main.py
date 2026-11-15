@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import models
 from app.database import Base, engine
-from app.routes import claims, gaps, handover, upload
+from app.routes import auth, claims, gaps, handover, upload
 
 
 @asynccontextmanager
@@ -36,6 +36,7 @@ app.include_router(upload.router)
 app.include_router(claims.router)
 app.include_router(gaps.router)
 app.include_router(handover.router)
+app.include_router(auth.router)
 
 
 @app.get("/health")

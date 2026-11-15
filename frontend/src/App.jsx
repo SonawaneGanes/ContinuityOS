@@ -5,6 +5,8 @@ import {
   checkHealth,
   getClaims,
   getGaps,
+  getProjectStatus,
+  login as loginApi,
   uploadFile,
 } from "./api";
 import folderArt from "./assets/trail/folder.webp";
@@ -86,7 +88,12 @@ export default function App() {
   // evidence is on screen. Keeping them apart means the panels, the export and
   // the approval always act on the project you are actually looking at.
   const [projectId, setProjectId] = useState("1");
+  const [token, setToken] = useState(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState(null);
   const [activeId, setActiveId] = useState(null);
+  const [projectStatus, setProjectStatus] = useState(null);
   const [claims, setClaims] = useState([]);
   const [tab, setTab] = useState("timeline");
   const [notice, setNotice] = useState(null); // { id, tone, text }
@@ -175,10 +182,12 @@ export default function App() {
   // Shared by "Load project" and uploads: fetch gaps, then claims, then put
   // that project on screen.
   async function showProject(id) {
-    const gaps = await getGaps(id);
-    const data = await getClaims(id);
+    const gaps = await getGaps(id, token);
+    const data = await getClaims(id, token);
+    const status = await getProjectStatus(id, token);
     setClaims(data);
     setActiveId(id);
+    setProjectStatus(status.status);
     setReadiness(readScore(gaps));
     setApproval(null);
     setRefreshKey((current) => current + 1);
@@ -188,6 +197,10 @@ export default function App() {
 
   async function loadProject() {
     if (busy) return;
+    if (!token) {
+      say("error", "Sign in before loading a project.");
+      return;
+    }
     if (!VALID_ID.test(projectId)) {
       say("error", "Enter a valid project ID.");
       return;
@@ -207,6 +220,10 @@ export default function App() {
   async function uploadEvidence(fileList) {
     const files = Array.from(fileList ?? []);
     if (files.length === 0 || busy) return;
+    if (role !== "lead") {
+      say("error", "Only a lead can upload evidence.");
+      return;
+    }
     revealWorkspace();
     if (!VALID_ID.test(projectId)) {
       say("error", "Enter a valid project ID before uploading.");
@@ -227,7 +244,7 @@ export default function App() {
     let uploaded = 0;
     try {
       for (const file of supported) {
-        const result = await uploadFile(projectId, file);
+        const result = await uploadFile(projectId, file, token);
         saved += Number(result?.claims_saved) || 0;
         rejected += Number(result?.claims_rejected) || 0;
         uploaded += 1;
@@ -252,6 +269,10 @@ export default function App() {
   async function handleApproval(event) {
     event.preventDefault();
     if (busy) return;
+    if (role !== "manager") {
+      say("error", "Only a manager can approve a handover.");
+      return;
+    }
     if (!activeId) {
       say("error", "Load a project before approving its handover.");
       return;
@@ -265,7 +286,7 @@ export default function App() {
     setBusy("approve");
     setNotice(null);
     try {
-      const result = await approveHandover(activeId, name);
+      const result = await approveHandover(activeId, name, token);
       const by = result?.approved_by ?? name;
       const score = result?.readiness_score ?? null;
       const gauge = readScore(result);
@@ -286,7 +307,41 @@ export default function App() {
   }
 
   function openFilePicker() {
+    if (role !== "lead") {
+      say("error", "Sign in as a lead to upload evidence.");
+      return;
+    }
     fileInputRef.current?.click();
+  }
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy("login");
+    setNotice(null);
+    try {
+      const result = await loginApi(username.trim(), password);
+      setToken(result.token);
+      setRole(result.role);
+      setUsername(result.username);
+      setPassword("");
+      say("success", `Signed in as ${result.username} (${result.role}).`);
+    } catch (error) {
+      say("error", explain(error));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function logout() {
+    setToken(null);
+    setRole(null);
+    setPassword("");
+    setClaims([]);
+    setActiveId(null);
+    setProjectStatus(null);
+    setReadiness(null);
+    setApproval(null);
   }
 
   // Uploads can start from the hero button or from a drop anywhere on the
@@ -368,6 +423,45 @@ export default function App() {
               </h2>
             </Reveal>
 
+            <div className="auth-bar">
+              {token ? (
+                <>
+                  <p>
+                    Signed in as <strong>{username}</strong> · {role}
+                  </p>
+                  <button className="button button-secondary" onClick={logout} type="button">
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <form className="auth-form" onSubmit={handleLogin}>
+                  <label>
+                    <span className="field-label">Username</span>
+                    <input
+                      autoComplete="username"
+                      onChange={(event) => setUsername(event.target.value)}
+                      required
+                      value={username}
+                    />
+                  </label>
+                  <label>
+                    <span className="field-label">Password</span>
+                    <input
+                      autoComplete="current-password"
+                      onChange={(event) => setPassword(event.target.value)}
+                      required
+                      type="password"
+                      value={password}
+                    />
+                  </label>
+                  <button className="button button-primary" disabled={busy === "login"} type="submit">
+                    {busy === "login" && <Spinner />}
+                    {busy === "login" ? "Signing in…" : "Sign in"}
+                  </button>
+                </form>
+              )}
+            </div>
+
             <Reveal aria-busy={isBusy} className="workspace" data-busy={busy ?? undefined}>
               <span aria-hidden="true" className="workspace-progress" />
 
@@ -395,29 +489,34 @@ export default function App() {
                       value={projectId}
                     />
                   </span>
-                  <button className="button button-primary" disabled={isBusy} type="submit">
+                  <button className="button button-primary" disabled={isBusy || !token} type="submit">
                     {busy === "load" && <Spinner />}
                     {busy === "load" ? "Loading…" : "Load project"}
                   </button>
                 </form>
 
                 <div className="toolbar-actions">
-                  <label className="button button-secondary upload-button" data-disabled={isBusy}>
-                    {busy === "upload" ? <Spinner /> : <Upload size={16} />}
-                    {busy === "upload" ? "Uploading…" : "Upload evidence"}
-                    <input
-                      accept={FILE_TYPES.join(",")}
-                      disabled={isBusy}
-                      multiple
-                      onChange={(event) => {
-                        void uploadEvidence(event.target.files);
-                        event.target.value = "";
-                      }}
-                      ref={fileInputRef}
-                      type="file"
-                    />
-                  </label>
-                  <ExportButton claims={claims} projectId={activeId ?? projectId} />
+                  {role === "lead" && (
+                    <label className="button button-secondary upload-button" data-disabled={isBusy}>
+                      {busy === "upload" ? <Spinner /> : <Upload size={16} />}
+                      {busy === "upload" ? "Uploading…" : "Upload evidence"}
+                      <input
+                        accept={FILE_TYPES.join(",")}
+                        disabled={isBusy}
+                        multiple
+                        onChange={(event) => {
+                          void uploadEvidence(event.target.files);
+                          event.target.value = "";
+                        }}
+                        ref={fileInputRef}
+                        type="file"
+                      />
+                    </label>
+                  )}
+                  {token &&
+                    (role !== "successor" || projectStatus === "approved") && (
+                      <ExportButton claims={claims} projectId={activeId ?? projectId} />
+                    )}
                 </div>
               </div>
 
@@ -483,7 +582,7 @@ export default function App() {
                     <div className="blank-actions">
                       <button
                         className="button button-primary"
-                        disabled={isBusy || !validId}
+                        disabled={isBusy || !validId || !token}
                         onClick={() => void loadProject()}
                         type="button"
                       >
@@ -491,7 +590,7 @@ export default function App() {
                       </button>
                       <button
                         className="button button-secondary"
-                        disabled={isBusy}
+                        disabled={isBusy || role !== "lead"}
                         onClick={openFilePicker}
                         type="button"
                       >
@@ -504,14 +603,26 @@ export default function App() {
                   <>
                     {tab === "timeline" && <Timeline claims={claims} />}
                     {tab === "source" && (
-                      <SourceViewer claims={claims} key={activeId} projectId={activeId} />
+                      <SourceViewer
+                        claims={claims}
+                        key={activeId}
+                        projectId={activeId}
+                        token={token}
+                      />
                     )}
-                    {tab === "gaps" && <GapPanel projectId={activeId} refreshKey={refreshKey} />}
+                    {tab === "gaps" && (
+                      <GapPanel
+                        projectId={activeId}
+                        refreshKey={refreshKey}
+                        token={token}
+                      />
+                    )}
                   </>
                 )}
               </div>
 
-              <form className={`approval-form${approved ? " is-approved" : ""}`} onSubmit={handleApproval}>
+              {role === "manager" && (
+                <form className={`approval-form${approved ? " is-approved" : ""}`} onSubmit={handleApproval}>
                 <div className="approval-copy">
                   <p className="eyebrow">Handover</p>
                   {approved ? (
@@ -542,7 +653,8 @@ export default function App() {
                     {busy === "approve" ? "Approving…" : "Approve handover"}
                   </button>
                 </Magnetic>
-              </form>
+                </form>
+              )}
             </Reveal>
           </section>
         </div>

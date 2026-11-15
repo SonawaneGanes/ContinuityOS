@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 import { getSource } from "../api";
 import LabelBadge from "./LabelBadge";
 
-export default function SourceViewer({ projectId, claims }) {
+export default function SourceViewer({ projectId, claims, token }) {
   const [selected, setSelected] = useState(null);
   const [source, setSource] = useState(null);
 
   useEffect(() => {
     if (!selected) return undefined;
     let active = true;
-    getSource(projectId, selected.id)
+    getSource(projectId, selected.id, token)
       .then((result) => {
         if (active) setSource({ claimId: selected.id, result });
       })
@@ -23,7 +23,7 @@ export default function SourceViewer({ projectId, claims }) {
     return () => {
       active = false;
     };
-  }, [selected, projectId]);
+  }, [selected, projectId, token]);
 
   const selectedSource = source?.claimId === selected?.id ? source : null;
   const error = selectedSource?.error || "";

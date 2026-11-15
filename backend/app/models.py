@@ -55,3 +55,21 @@ class Claim(Base):
     label = Column(String(20), default="VERIFIED", nullable=False)
 
     project = relationship("Project", back_populates="claims")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False)
+    project_id = Column(Integer, nullable=True)
+
+
+class AuthSession(Base):
+    __tablename__ = "sessions"
+
+    token = Column(String(128), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

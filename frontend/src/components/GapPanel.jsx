@@ -10,12 +10,12 @@ const SECTIONS = [
   ["Broken dependencies", "broken_dependencies"],
 ];
 
-export default function GapPanel({ projectId, refreshKey }) {
+export default function GapPanel({ projectId, refreshKey, token }) {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
     let active = true;
-    getGaps(projectId)
+    getGaps(projectId, token)
       .then((report) => {
         if (active) setResult({ projectId, report });
       })
@@ -26,7 +26,7 @@ export default function GapPanel({ projectId, refreshKey }) {
     return () => {
       active = false;
     };
-  }, [projectId, refreshKey]);
+  }, [projectId, refreshKey, token]);
 
   const currentResult = result?.projectId === projectId ? result : null;
   const report = currentResult?.report;

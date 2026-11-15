@@ -1,11 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app import models
+from app.auth import authorize_project, get_current_user
 from app.database import get_db
 
 
 router = APIRouter(prefix="/projects", tags=["claims"])
+READ_ROLES = frozenset({"lead", "successor", "manager"})
+
+
+class LabelUpdate(BaseModel):
+    label: str
 
 
 def claim_to_dict(claim: models.Claim) -> dict[str, object]:
@@ -24,8 +31,11 @@ def claim_to_dict(claim: models.Claim) -> dict[str, object]:
 
 @router.get("/{project_id}/claims")
 def list_claims(
-    project_id: int, db: Session = Depends(get_db)
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ) -> list[dict[str, object]]:
+    authorize_project(current_user, project_id, READ_ROLES)
     rows = (
         db.query(models.Claim)
         .filter(models.Claim.project_id == project_id)
@@ -36,8 +46,12 @@ def list_claims(
 
 @router.get("/{project_id}/claims/{claim_id}/source")
 def source_for_claim(
-    project_id: int, claim_id: int, db: Session = Depends(get_db)
+    project_id: int,
+    claim_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ) -> dict[str, object]:
+    authorize_project(current_user, project_id, READ_ROLES)
     claim = db.get(models.Claim, claim_id)
     if not claim or claim.project_id != project_id:
         raise HTTPException(status_code=404, detail="Claim not found")
@@ -51,3 +65,23 @@ def source_for_claim(
         "start_char": claim.start_char,
         "end_char": claim.end_char,
     }
+
+
+@router.patch("/{project_id}/claims/{claim_id}/label")
+def update_claim_label(
+    project_id: int,
+    claim_id: int,
+    update: LabelUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> dict[str, object]:
+    authorize_project(current_user, project_id, {"lead"})
+    if update.label not in {"VERIFIED", "UNCERTAIN", "CONFLICTING", "MISSING"}:
+        raise HTTPException(status_code=422, detail="Invalid claim label")
+
+    claim = db.get(models.Claim, claim_id)
+    if claim is None or claim.project_id != project_id:
+        raise HTTPException(status_code=404, detail="Claim not found")
+    claim.label = update.label
+    db.commit()
+    return claim_to_dict(claim)

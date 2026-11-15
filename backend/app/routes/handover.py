@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app import models
+from app.auth import authorize_project, get_current_user
 from app.database import get_db
 from app.services.gaps import run_all_checks
 
@@ -15,7 +16,9 @@ def approve_handover(
     project_id: int,
     approved_by: str = Query(min_length=1),
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ) -> dict[str, object]:
+    authorize_project(current_user, project_id, {"manager"})
     approved_by = approved_by.strip()
     if not approved_by:
         raise HTTPException(status_code=422, detail="Approver name cannot be empty")

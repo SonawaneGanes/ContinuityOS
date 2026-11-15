@@ -3,6 +3,7 @@ from openai import APIError
 from sqlalchemy.orm import Session
 
 from app import models
+from app.auth import authorize_project, get_current_user
 from app.database import get_db
 from app.services.extractor import extract_claims
 from app.services.parser import parse_file
@@ -13,7 +14,14 @@ router = APIRouter(prefix="/projects", tags=["upload"])
 
 
 @router.post("")
-def create_project(name: str, db: Session = Depends(get_db)) -> dict[str, object]:
+def create_project(
+    name: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> dict[str, object]:
+    if current_user.role not in {"lead", "manager"} or current_user.project_id is not None:
+        raise HTTPException(status_code=403, detail="Insufficient role")
+
     name = name.strip()
     if not name:
         raise HTTPException(status_code=422, detail="Project name cannot be empty")
@@ -25,12 +33,27 @@ def create_project(name: str, db: Session = Depends(get_db)) -> dict[str, object
     return {"id": project.id, "name": project.name, "status": project.status}
 
 
+@router.get("/{project_id}/status")
+def project_status(
+    project_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+) -> dict[str, str]:
+    authorize_project(current_user, project_id, {"lead", "successor", "manager"})
+    project = db.get(models.Project, project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {"status": project.status}
+
+
 @router.post("/{project_id}/upload")
 async def upload_file(
     project_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ) -> dict[str, int]:
+    authorize_project(current_user, project_id, {"lead"})
     if not db.get(models.Project, project_id):
         raise HTTPException(status_code=404, detail="Project not found")
 
