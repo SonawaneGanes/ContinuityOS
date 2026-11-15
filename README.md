@@ -69,6 +69,7 @@ Set these values in `backend/.env`:
 DATABASE_URL=postgresql://continuity:continuity_pass@localhost:5432/continuityos
 GEMINI_API_KEY=your_key_here
 LLM_MODEL=gemini-3.8-flash
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
 
 Never commit `.env`. It is listed in `.gitignore`.
@@ -110,10 +111,12 @@ Configure these environment variables:
   (for example, `https://api.example.com`, without a trailing slash), then
   trigger a new deploy. `frontend/.env.example` shows the expected format.
 - **Backend host:** Set `DATABASE_URL` to the hosted PostgreSQL connection
-  string, `GEMINI_API_KEY` for file extraction, and `CORS_ORIGINS` to the
-  exact Netlify site origin (for example, `https://your-site.netlify.app`).
-  Multiple allowed origins can be comma-separated. Keep the local origins in
-  `backend/.env.example` when developing locally.
+  string, `GEMINI_API_KEY` for file extraction, `LLM_MODEL` (defaults to
+  `gemini-3.8-flash`), and `CORS_ORIGINS` to the exact Netlify site origin
+  (for example, `https://your-site.netlify.app`). Multiple allowed origins
+  can be comma-separated. Keep the local origins in `backend/.env.example`
+  when developing locally. The extractor reads `GEMINI_API_KEY`; it does not
+  require `OPENAI_API_KEY`.
 
 Check that `https://<your-backend-host>/health` returns `{"status":"ok"}` and
 that the deployed frontend can reach it before using upload and project
@@ -126,7 +129,7 @@ The root `render.yaml` defines the API service. In Render, choose **New +
 Blueprint** and connect this repository. The service uses `backend/` as its
 root directory, installs dependencies from `backend/requirements.txt`, and
 starts Uvicorn from the directory containing the `app` package. It also pins
-Python to 3.12.10 and uses `/health` as its health check.
+Python to 3.12.4 and uses `/health` as its health check.
 
 Set the prompted environment variables on the Render API service:
 
