@@ -1,4 +1,4 @@
-from app.services.verifier import locate_and_verify
+from app.services.verifier import attest_claim, locate_and_verify
 
 
 TEXT = "Login API is in progress, owner Ravi Kumar."
@@ -22,3 +22,16 @@ def test_changed_wording_is_rejected():
 def test_empty_quote_is_rejected():
     assert locate_and_verify(TEXT, "") is None
     assert locate_and_verify(TEXT, None) is None
+
+
+def test_matching_quote_is_attested():
+    quote = "owner Ravi Kumar"
+    start = TEXT.index(quote)
+
+    assert attest_claim(TEXT, quote, start, start + len(quote))
+
+
+def test_wrong_quote_offset_is_not_attested():
+    quote = "owner Ravi Kumar"
+
+    assert not attest_claim(TEXT, quote, 0, len(quote))

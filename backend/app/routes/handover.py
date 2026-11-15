@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.auth import authorize_project, get_current_user
 from app.database import get_db
+from app.routes.claims import calculate_project_attestation
 from app.services.gaps import run_all_checks
 
 
@@ -32,6 +33,15 @@ def approve_handover(
         .filter(models.Claim.project_id == project_id)
         .all()
     )
+    attestation = calculate_project_attestation(db, project_id)
+    if attestation["failed"]:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Approval blocked: {attestation['failed']} claim(s) failed "
+                "quote attestation."
+            ),
+        )
     score = run_all_checks(claims)["readiness_score"]
     if score < READINESS_THRESHOLD:
         raise HTTPException(
