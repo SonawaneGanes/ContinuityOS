@@ -51,7 +51,7 @@ def validate_items(raw_items: list[Any]) -> tuple[list[dict[str, Any]], int]:
     return valid, invalid
 
 
-def extract_claims(text: str) -> list[dict[str, Any]]:
+def _request_model_response(text: str) -> str:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key or api_key == "your_key_here":
         raise RuntimeError("GEMINI_API_KEY is not set in backend/.env")
@@ -69,6 +69,11 @@ def extract_claims(text: str) -> list[dict[str, Any]]:
     content = response.choices[0].message.content
     if not content:
         raise ValueError("LLM returned an empty response")
+    return content
+
+
+def extract_claims(text: str) -> list[dict[str, Any]]:
+    content = _request_model_response(text)
     items = json.loads(_clean_json(content))
     if not isinstance(items, list):
         raise ValueError("LLM did not return a list")
@@ -76,3 +81,19 @@ def extract_claims(text: str) -> list[dict[str, Any]]:
     valid, invalid = validate_items(items)
     print(f"Extraction: {len(valid)} valid, {invalid} invalid claims")
     return valid
+
+
+def extract_claims_with_stats(text: str) -> tuple[list[dict[str, Any]], int]:
+    """Return valid claims and count invalid model outputs for evaluation."""
+    try:
+        content = _request_model_response(text)
+    except ValueError:
+        return [], 1
+
+    try:
+        items = json.loads(_clean_json(content))
+    except json.JSONDecodeError:
+        return [], 1
+    if not isinstance(items, list):
+        return [], 1
+    return validate_items(items)

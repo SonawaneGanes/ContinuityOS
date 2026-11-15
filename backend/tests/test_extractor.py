@@ -38,3 +38,17 @@ def test_extract_claims_requires_gemini_api_key(monkeypatch):
 
     with pytest.raises(RuntimeError, match="GEMINI_API_KEY"):
         extractor.extract_claims("Login API is planned.")
+
+
+def test_benchmark_extractor_counts_invalid_json_without_raising(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
+    client = Mock()
+    client.chat.completions.create.return_value.choices = [
+        Mock(message=Mock(content="not valid json"))
+    ]
+    monkeypatch.setattr(extractor, "OpenAI", Mock(return_value=client))
+
+    claims, invalid = extractor.extract_claims_with_stats("Input")
+
+    assert claims == []
+    assert invalid == 1

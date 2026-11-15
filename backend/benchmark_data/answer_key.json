@@ -1,0 +1,22 @@
+[
+  {
+    "file": "meeting_notes.md",
+    "category": "unowned",
+    "subject": "Partner portal migration"
+  },
+  {
+    "file": "meeting_notes.md",
+    "category": "conflict",
+    "subject": "Archive rollout"
+  },
+  {
+    "file": "chat_log.txt",
+    "category": "stale",
+    "subject": "Mobile sync retry"
+  },
+  {
+    "file": "task_board.csv",
+    "category": "broken",
+    "subject": "Quarterly access review"
+  }
+]

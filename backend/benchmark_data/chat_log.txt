@@ -1,0 +1,15 @@
+Team chat, Tuesday afternoon:
+
+Mina: The mobile sync retry is still in progress. We last updated its implementation on 2026-08-15, and nobody has posted a newer status since then. Please leave it open until we can confirm the background retry behavior on a slow connection.
+
+Arun: Understood. I will not mark it done based on the old test result. The test only covered a stable office network. I can check the reconnect behavior after we finish the release notes.
+
+Mina: The release notes are assigned to Ravi and are due on 2026-11-21. The support walkthrough is scheduled for 2026-11-22, and the calendar invite is already shared with the operations group.
+
+Ravi: I have the release notes draft. I will add a paragraph explaining how the client reports a failed sync and where the retry status appears. The copy review can happen after the product wording is approved.
+
+Mina: Thanks. Keep the two items separate in the handover. The notes are a confirmed deliverable, while the extra reconnect test is still planned work. If the test uncovers a defect, record the evidence and assign an owner before promising a fix date.
+
+Arun: I will link the current test log and make sure the old result is not described as proof that every connection type works.
+
+Mina: Great. We can review the new run in the next check-in and update the status then.
