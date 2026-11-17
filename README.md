@@ -102,7 +102,7 @@ npm install
 npm run dev
 ```
 
-Open [<http://localhost:5173>](https://continuityoss.netlify.app/).
+Open (https://continuityoss.netlify.app/).
 
 ## Deploy the frontend to Netlify
 
